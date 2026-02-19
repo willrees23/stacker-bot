@@ -4,6 +4,7 @@ import dev.wand.stacker.commands.CommandManager;
 import dev.wand.stacker.commands.bug.BugCommand;
 import dev.wand.stacker.commands.tester.TesterCommand;
 import dev.wand.stacker.config.Config;
+import dev.wand.stacker.listeners.ForumThreadListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
  * - All commands require the configured role (automatic check)
  * - Embeds are managed centrally through EmbedManager
  * - Configuration is stored in Config class
+ * - Event listeners handle automatic actions (e.g., auto-tagging new threads)
  * 
  * To add a new command:
  * 1. Create a class that implements CommandInterface in the commands package
@@ -48,6 +50,9 @@ public class Bot {
             // Create CommandManager
             CommandManager commandManager = new CommandManager();
             
+            // Create event listeners
+            ForumThreadListener forumThreadListener = new ForumThreadListener();
+            
             // Build JDA instance
             jda = JDABuilder.createDefault(token)
                     .enableIntents(
@@ -56,7 +61,7 @@ public class Bot {
                             GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.watching("for bugs"))
-                    .addEventListeners(commandManager)
+                    .addEventListeners(commandManager, forumThreadListener)
                     .build();
             
             // Wait for JDA to be ready

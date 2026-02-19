@@ -88,6 +88,40 @@ public class EmbedManager {
     }
     
     /**
+     * Create the embed for when a bug is marked as in progress.
+     * This is sent when the /bug in-progress command is used.
+     * 
+     * @return The bug in progress embed
+     */
+    public static MessageEmbed createBugInProgressEmbed() {
+        return new EmbedBuilder()
+                .setTitle("🔄 Bug In Progress")
+                .setDescription("This bug is now being worked on. The thread will remain open for updates.\n\n" +
+                        "Thank you for your patience!")
+                .setColor(COLOR_WARNING)
+                .setTimestamp(Instant.now())
+                .setFooter("Stacker Bot", null)
+                .build();
+    }
+    
+    /**
+     * Create the embed for when a bug is marked as resolved.
+     * This is sent when the /bug resolved command is used.
+     * 
+     * @return The bug resolved embed
+     */
+    public static MessageEmbed createBugResolvedEmbed() {
+        return new EmbedBuilder()
+                .setTitle("✅ Bug Resolved")
+                .setDescription("This bug has been resolved and the thread is now closed.\n\n" +
+                        "Thank you for your report!")
+                .setColor(COLOR_SUCCESS)
+                .setTimestamp(Instant.now())
+                .setFooter("Stacker Bot", null)
+                .build();
+    }
+    
+    /**
      * Create the embed for permission denied errors.
      * 
      * @return The permission denied embed
