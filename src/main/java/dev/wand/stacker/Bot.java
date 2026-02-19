@@ -97,21 +97,22 @@ public class Bot {
     /**
      * Register all commands with Discord.
      * This updates the slash commands available in Discord.
+     * Commands are registered to the specific guild for immediate availability.
      * 
      * @param commandManager The command manager with registered commands
      */
     private static void registerCommandsWithDiscord(CommandManager commandManager) {
-        // Update commands globally (takes up to 1 hour to propagate)
-        // For immediate testing, use updateCommands() on a specific guild instead
-        jda.updateCommands()
+        // Register commands to the specific guild for immediate availability
+        // Guild commands are available immediately (no 1-hour wait like global commands)
+        jda.getGuildById(Config.GUILD_ID).updateCommands()
                 .addCommands(
                         commandManager.getCommands().values().stream()
                                 .map(cmd -> cmd.getCommandData())
                                 .toList()
                 )
                 .queue(
-                        success -> logger.info("Commands registered with Discord"),
-                        error -> logger.error("Failed to register commands with Discord", error)
+                        success -> logger.info("Commands registered with guild {}", Config.GUILD_ID),
+                        error -> logger.error("Failed to register commands with guild", error)
                 );
     }
     

@@ -52,8 +52,8 @@ public class FixSubcommand {
         
         ThreadChannel threadChannel = (ThreadChannel) channel;
         
-        // Defer the reply since we're doing multiple operations
-        event.deferReply().queue();
+        // Defer the reply ephemerally since we're doing multiple operations
+        event.deferReply(true).queue();
         
         // Apply the Fixed tag
         applyFixedTag(event, threadChannel);
@@ -69,10 +69,7 @@ public class FixSubcommand {
         // Verify the parent channel is a ForumChannel
         if (!(threadChannel.getParentChannel() instanceof ForumChannel)) {
             logger.error("Parent channel is not a ForumChannel: {}", threadChannel.getParentChannel().getName());
-            event.getHook().editOriginalEmbeds(EmbedManager.createError(
-                    "Error",
-                    "This thread's parent channel is not a forum."
-            )).queue();
+            event.getHook().editOriginal("❌ This thread's parent channel is not a forum.").queue();
             return;
         }
         
@@ -86,10 +83,7 @@ public class FixSubcommand {
         
         if (fixedTag == null) {
             logger.error("Fixed tag not found in forum: {}", parentChannel.getName());
-            event.getHook().editOriginalEmbeds(EmbedManager.createError(
-                    "Error",
-                    "The Fixed tag is not configured in this forum."
-            )).queue();
+            event.getHook().editOriginal("❌ The Fixed tag is not configured in this forum.").queue();
             return;
         }
         
@@ -109,18 +103,21 @@ public class FixSubcommand {
         threadChannel.getManager().setAppliedTags(newTags).queue(
                 success -> {
                     logger.info("Applied Fixed tag to thread: {}", threadChannel.getName());
-                    // Send the confirmation embed and close the thread
-                    event.getHook().editOriginalEmbeds(EmbedManager.createBugFixedEmbed()).queue(
-                            message -> closeThread(threadChannel),
-                            error -> logger.error("Failed to send bug fixed embed", error)
+                    // Send ephemeral success message to the user
+                    event.getHook().editOriginal("✅ Successfully marked this bug as fixed!").queue(
+                            message -> {
+                                // Send the public embed into the channel
+                                threadChannel.sendMessageEmbeds(EmbedManager.createBugFixedEmbed()).queue(
+                                        publicMessage -> closeThread(threadChannel),
+                                        error -> logger.error("Failed to send bug fixed embed", error)
+                                );
+                            },
+                            error -> logger.error("Failed to send ephemeral response", error)
                     );
                 },
                 error -> {
                     logger.error("Failed to apply Fixed tag to thread", error);
-                    event.getHook().editOriginalEmbeds(EmbedManager.createError(
-                            "Error",
-                            "Failed to apply the Fixed tag. Please check bot permissions."
-                    )).queue();
+                    event.getHook().editOriginal("❌ Failed to apply the Fixed tag. Please check bot permissions.").queue();
                 }
         );
     }

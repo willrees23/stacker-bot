@@ -18,6 +18,9 @@ public class Config {
     // Channel IDs
     public static final String CHANNEL_TESTER_LOG_FORUM = "1473013973334102251";
     
+    // Guild ID
+    public static final String GUILD_ID = "1473013379902996542";
+    
     // Role IDs
     public static final String ROLE_REQUIRED = "1473026921158676480";
     public static final String ROLE_TESTER_1 = "1473013562371997879";
