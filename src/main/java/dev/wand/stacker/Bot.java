@@ -104,7 +104,13 @@ public class Bot {
     private static void registerCommandsWithDiscord(CommandManager commandManager) {
         // Register commands to the specific guild for immediate availability
         // Guild commands are available immediately (no 1-hour wait like global commands)
-        jda.getGuildById(Config.GUILD_ID).updateCommands()
+        var guild = jda.getGuildById(Config.GUILD_ID);
+        if (guild == null) {
+            logger.error("Guild with ID {} not found. Bot may not be a member of this guild.", Config.GUILD_ID);
+            return;
+        }
+        
+        guild.updateCommands()
                 .addCommands(
                         commandManager.getCommands().values().stream()
                                 .map(cmd -> cmd.getCommandData())
