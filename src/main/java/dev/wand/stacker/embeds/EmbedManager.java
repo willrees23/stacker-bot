@@ -165,6 +165,22 @@ public class EmbedManager {
                 .build();
     }
     
+    /**
+     * Create the embed for when a tester is queued for role assignment on join.
+     *
+     * @param username The username of the user who is not yet in the server
+     * @return The tester queued embed
+     */
+    public static MessageEmbed createTesterPendingEmbed(String username) {
+        return new EmbedBuilder()
+                .setTitle("Tester Queued")
+                .setDescription("**" + username + "** is not currently in the server. " +
+                        "They will automatically receive tester roles when they join.")
+                .setColor(COLOR_INFO)
+                .setTimestamp(Instant.now())
+                .build();
+    }
+
     private EmbedManager() {
         // Utility class, prevent instantiation
     }

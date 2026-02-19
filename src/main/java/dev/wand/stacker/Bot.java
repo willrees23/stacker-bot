@@ -1,10 +1,12 @@
 package dev.wand.stacker;
 
+import dev.wand.stacker.commands.CommandInterface;
 import dev.wand.stacker.commands.CommandManager;
 import dev.wand.stacker.commands.bug.BugCommand;
 import dev.wand.stacker.commands.tester.TesterCommand;
 import dev.wand.stacker.config.Config;
 import dev.wand.stacker.listeners.ForumThreadListener;
+import dev.wand.stacker.listeners.PendingTesterListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -52,7 +54,8 @@ public class Bot {
             
             // Create event listeners
             ForumThreadListener forumThreadListener = new ForumThreadListener();
-            
+            PendingTesterListener pendingTesterListener = new PendingTesterListener();
+
             // Build JDA instance
             jda = JDABuilder.createDefault(token)
                     .enableIntents(
@@ -61,7 +64,7 @@ public class Bot {
                             GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.watching("for bugs"))
-                    .addEventListeners(commandManager, forumThreadListener)
+                    .addEventListeners(commandManager, forumThreadListener, pendingTesterListener)
                     .build();
             
             // Wait for JDA to be ready
@@ -118,7 +121,7 @@ public class Bot {
         guild.updateCommands()
                 .addCommands(
                         commandManager.getCommands().values().stream()
-                                .map(cmd -> cmd.getCommandData())
+                                .map(CommandInterface::getCommandData)
                                 .toList()
                 )
                 .queue(

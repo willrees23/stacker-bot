@@ -3,6 +3,7 @@ package dev.wand.stacker.commands.tester;
 import dev.wand.stacker.commands.CommandInterface;
 import dev.wand.stacker.config.Config;
 import dev.wand.stacker.embeds.EmbedManager;
+import dev.wand.stacker.utils.PendingTesterStore;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -62,11 +63,15 @@ public class TesterCommand implements CommandInterface {
         guild.retrieveMember(targetUser).queue(
                 targetMember -> assignTesterRoles(event, guild, targetMember),
                 error -> {
-                    logger.error("Failed to retrieve member: {}", targetUser.getName(), error);
-                    event.getHook().editOriginalEmbeds(EmbedManager.createError(
-                            "Error",
-                            "Could not find that user in this server."
-                    )).queue();
+                    logger.info("User {} not in server; adding to pending tester store", targetUser.getName());
+                    try {
+                        PendingTesterStore.addPendingTester(targetUser.getId());
+                    } catch (java.io.IOException e) {
+                        logger.error("Failed to add {} to pending tester store", targetUser.getId(), e);
+                    }
+                    event.getHook().editOriginalEmbeds(
+                            EmbedManager.createTesterPendingEmbed(targetUser.getName())
+                    ).queue();
                 }
         );
     }
