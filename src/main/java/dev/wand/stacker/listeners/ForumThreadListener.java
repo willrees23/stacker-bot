@@ -1,6 +1,7 @@
 package dev.wand.stacker.listeners;
 
 import dev.wand.stacker.config.Config;
+import dev.wand.stacker.utils.ValidationUtils;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
@@ -17,7 +18,8 @@ import java.util.List;
  * 
  * When a new thread is created in the Tester Log Forum, this listener:
  * 1. Validates that the thread belongs to the correct forum
- * 2. Applies the "Pending" tag automatically
+ * 2. Checks if a status tag is already applied
+ * 3. Applies the "Pending" tag automatically if no status tag exists
  * 
  * This ensures all new bug reports start with a consistent status.
  */
@@ -63,12 +65,7 @@ public class ForumThreadListener extends ListenerAdapter {
         
         // Check if a status tag is already applied
         boolean hasStatusTag = currentTags.stream()
-                .anyMatch(tag -> 
-                        tag.getId().equals(Config.TAG_PENDING) ||
-                        tag.getId().equals(Config.TAG_IN_PROGRESS) ||
-                        tag.getId().equals(Config.TAG_FIXED) ||
-                        tag.getId().equals(Config.TAG_RESOLVED)
-                );
+                .anyMatch(ValidationUtils::isStatusTag);
         
         // Only add Pending tag if no status tag is present
         if (!hasStatusTag) {

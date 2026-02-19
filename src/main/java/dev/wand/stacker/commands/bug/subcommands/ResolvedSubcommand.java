@@ -91,12 +91,7 @@ public class ResolvedSubcommand {
         List<ForumTag> newTags = new ArrayList<>(threadChannel.getAppliedTags());
         
         // Remove any existing status tags and add the Resolved tag
-        newTags.removeIf(tag -> 
-                tag.getId().equals(Config.TAG_FIXED) ||
-                tag.getId().equals(Config.TAG_IN_PROGRESS) ||
-                tag.getId().equals(Config.TAG_PENDING) ||
-                tag.getId().equals(Config.TAG_RESOLVED)
-        );
+        newTags.removeIf(ValidationUtils::isStatusTag);
         newTags.add(resolvedTag);
         
         // Apply the tags
