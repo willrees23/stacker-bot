@@ -66,6 +66,16 @@ public class FixSubcommand {
      * @param threadChannel The thread to mark as fixed
      */
     private void applyFixedTag(SlashCommandInteractionEvent event, ThreadChannel threadChannel) {
+        // Verify the parent channel is a ForumChannel
+        if (!(threadChannel.getParentChannel() instanceof ForumChannel)) {
+            logger.error("Parent channel is not a ForumChannel: {}", threadChannel.getParentChannel().getName());
+            event.getHook().editOriginalEmbeds(EmbedManager.createError(
+                    "Error",
+                    "This thread's parent channel is not a forum."
+            )).queue();
+            return;
+        }
+        
         ForumChannel parentChannel = (ForumChannel) threadChannel.getParentChannel();
         
         // Get the Fixed tag from the forum

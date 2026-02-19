@@ -90,10 +90,18 @@ public class CommandManager extends ListenerAdapter {
             command.execute(event);
         } catch (Exception e) {
             logger.error("Error executing command: {}", commandName, e);
-            event.replyEmbeds(EmbedManager.createError(
-                    "Error",
-                    "An error occurred while executing the command."
-            )).setEphemeral(true).queue();
+            // Check if the interaction has already been acknowledged
+            if (event.isAcknowledged()) {
+                event.getHook().editOriginalEmbeds(EmbedManager.createError(
+                        "Error",
+                        "An error occurred while executing the command."
+                )).queue();
+            } else {
+                event.replyEmbeds(EmbedManager.createError(
+                        "Error",
+                        "An error occurred while executing the command."
+                )).setEphemeral(true).queue();
+            }
         }
     }
 }
