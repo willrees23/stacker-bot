@@ -39,7 +39,9 @@ public class ValidationUtils {
         return tagId.equals(Config.TAG_FIXED) ||
                tagId.equals(Config.TAG_IN_PROGRESS) ||
                tagId.equals(Config.TAG_PENDING) ||
-               tagId.equals(Config.TAG_RESOLVED);
+               tagId.equals(Config.TAG_RESOLVED) ||
+               tagId.equals(Config.TAG_DUPLICATE) ||
+               tagId.equals(Config.TAG_INVESTIGATING);
     }
     
     private ValidationUtils() {

@@ -14,6 +14,8 @@ public class Config {
     public static final String TAG_RESOLVED = "1473827786471768307";
     public static final String TAG_FEATURE = "1473409710819639297";
     public static final String TAG_FEEDBACK = "1473409393151180901";
+    public static final String TAG_DUPLICATE = "1474731042610090074";
+    public static final String TAG_INVESTIGATING = "1474727573991981219";
     
     // Channel IDs
     public static final String CHANNEL_TESTER_LOG_FORUM = "1473013973334102251";

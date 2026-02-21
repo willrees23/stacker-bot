@@ -122,6 +122,42 @@ public class EmbedManager {
     }
     
     /**
+     * Create the embed for when a bug is being investigated.
+     * This is sent when the /investigate command is used.
+     *
+     * @return The bug investigating embed
+     */
+    public static MessageEmbed createBugInvestigatingEmbed() {
+        return new EmbedBuilder()
+                .setTitle("🔍 Bug Under Investigation")
+                .setDescription("This bug is now being investigated. The thread will remain open for updates.\n\n" +
+                        "Thank you for your patience!")
+                .setColor(COLOR_WARNING)
+                .setTimestamp(Instant.now())
+                .setFooter("Stacker Bot", null)
+                .build();
+    }
+
+    /**
+     * Create the embed for when a thread is marked as a duplicate.
+     * This is sent when the /duplicate command is used.
+     *
+     * @param originalThreadName The name of the original thread
+     * @param originalThreadUrl  The jump URL of the original thread
+     * @return The duplicate embed
+     */
+    public static MessageEmbed createBugDuplicateEmbed(String originalThreadName, String originalThreadUrl) {
+        return new EmbedBuilder()
+                .setTitle("🔁 Duplicate Thread")
+                .setDescription("This thread has been marked as a duplicate of [" + originalThreadName + "](" + originalThreadUrl + ").\n\n" +
+                        "Please follow the original thread for updates.")
+                .setColor(COLOR_INFO)
+                .setTimestamp(Instant.now())
+                .setFooter("Stacker Bot", null)
+                .build();
+    }
+
+    /**
      * Create the embed for permission denied errors.
      * 
      * @return The permission denied embed

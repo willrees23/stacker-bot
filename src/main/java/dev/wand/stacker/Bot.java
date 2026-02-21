@@ -2,7 +2,11 @@ package dev.wand.stacker;
 
 import dev.wand.stacker.commands.CommandInterface;
 import dev.wand.stacker.commands.CommandManager;
-import dev.wand.stacker.commands.bug.BugCommand;
+import dev.wand.stacker.commands.DuplicateCommand;
+import dev.wand.stacker.commands.FixCommand;
+import dev.wand.stacker.commands.InProgressCommand;
+import dev.wand.stacker.commands.InvestigateCommand;
+import dev.wand.stacker.commands.ResolvedCommand;
 import dev.wand.stacker.commands.tester.TesterCommand;
 import dev.wand.stacker.config.Config;
 import dev.wand.stacker.listeners.ForumThreadListener;
@@ -92,14 +96,12 @@ public class Bot {
      * @param commandManager The command manager instance
      */
     private static void setupCommands(CommandManager commandManager) {
-        // Register the tester command
         commandManager.registerCommand(new TesterCommand());
-        
-        // Register the bug command (with subcommands)
-        commandManager.registerCommand(new BugCommand());
-        
-        // Add more commands here as needed
-        // commandManager.registerCommand(new YourNewCommand());
+        commandManager.registerCommand(new FixCommand());
+        commandManager.registerCommand(new InProgressCommand());
+        commandManager.registerCommand(new ResolvedCommand());
+        commandManager.registerCommand(new DuplicateCommand());
+        commandManager.registerCommand(new InvestigateCommand());
     }
     
     /**
