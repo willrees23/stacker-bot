@@ -35,10 +35,20 @@ public interface CommandInterface {
     CommandData getCommandData();
     
     /**
+     * Whether this command requires the staff role to use.
+     * Override and return false to make a command available to all users.
+     *
+     * @return true if the staff role is required (default), false to allow everyone
+     */
+    default boolean requiresPermission() {
+        return true;
+    }
+
+    /**
      * Execute the command logic.
      * This method is called when a user invokes the command.
      * Permission checks are handled by the CommandManager before this is called.
-     * 
+     *
      * @param event The slash command interaction event
      */
     void execute(SlashCommandInteractionEvent event);

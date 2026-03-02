@@ -28,6 +28,9 @@ public class Config {
     public static final String ROLE_TESTER_1 = "1473013562371997879";
     public static final String ROLE_TESTER_2 = "1473013593405653115";
     
+    // Roblox game universe ID
+    public static final String ROBLOX_UNIVERSE_ID = "9460688566";
+
     // Bot token (should be set via environment variable)
     public static String getBotToken() {
         String token = System.getenv("DISCORD_BOT_TOKEN");

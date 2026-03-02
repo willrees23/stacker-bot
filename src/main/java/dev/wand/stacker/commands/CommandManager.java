@@ -70,14 +70,14 @@ public class CommandManager extends ListenerAdapter {
             return;
         }
         
-        // Check permissions
+        // Check permissions (skipped for commands that opt out)
         Member member = event.getMember();
-        if (!PermissionUtils.hasRequiredRole(member)) {
+        if (command.requiresPermission() && !PermissionUtils.hasRequiredRole(member)) {
             event.replyEmbeds(EmbedManager.createPermissionDeniedEmbed())
                     .setEphemeral(true)
                     .queue();
-            logger.info("User {} attempted to use command {} without required role", 
-                    member != null ? member.getUser().getName() : "Unknown", 
+            logger.info("User {} attempted to use command {} without required role",
+                    member != null ? member.getUser().getName() : "Unknown",
                     commandName);
             return;
         }

@@ -1,10 +1,15 @@
 package dev.wand.stacker.embeds;
 
+import dev.wand.stacker.services.GameStats;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.awt.Color;
+import java.text.NumberFormat;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  * Centralized manager for all bot embeds.
@@ -213,6 +218,56 @@ public class EmbedManager {
                 .setDescription("**" + username + "** is not currently in the server. " +
                         "They will automatically receive tester roles when they join.")
                 .setColor(COLOR_INFO)
+                .setTimestamp(Instant.now())
+                .build();
+    }
+
+    private static final DateTimeFormatter TIME_FMT =
+            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneOffset.UTC);
+
+    private static String fmt(long n) {
+        return NumberFormat.getInstance(Locale.US).format(n);
+    }
+
+    /**
+     * Create a one-shot stats embed for the /stats command.
+     *
+     * @param stats The fetched game stats
+     * @return A blurple-styled MessageEmbed with game statistics
+     */
+    public static MessageEmbed createStatsEmbed(GameStats stats) {
+        return new EmbedBuilder()
+                .setTitle("📊 Stacker — Game Stats")
+                .setColor(new Color(0x58, 0x65, 0xF2)) // Discord Blurple
+                .addField("Players", "`" + fmt(stats.playersOnline) + "`", true)
+                .addField("Servers", "`" + fmt(stats.serverCount) + "`", true)
+                .addField("Visits", "`" + fmt(stats.visits) + "`", true)
+                .addField("👍", "`" + fmt(stats.upVotes) + "`", true)
+                .addField("⭐", "`" + fmt(stats.favourites) + "`", true)
+                .setFooter("Last updated")
+                .setTimestamp(Instant.now())
+                .build();
+    }
+
+    /**
+     * Create a live-mode stats embed for the /stats admin:true command.
+     *
+     * @param stats The fetched game stats
+     * @return A red-orange-styled MessageEmbed with live game statistics
+     */
+    public static MessageEmbed createLiveStatsEmbed(GameStats stats) {
+        long nextRefresh = Instant.now().plusSeconds(120).getEpochSecond();
+        return new EmbedBuilder()
+                .setAuthor("🔴 LIVE")
+                .setTitle("📡 Stacker — Live Stats")
+                .setDescription("Refreshing <t:" + nextRefresh + ":R>")
+                .setColor(new Color(0xFF, 0x45, 0x00)) // Red-orange
+                .addField("Players", "`" + fmt(stats.playersOnline) + "`", true)
+                .addField("Servers", "`" + fmt(stats.serverCount) + "`", true)
+                .addField("Visits", "`" + fmt(stats.visits) + "`", true)
+                .addField("👍", "`" + fmt(stats.upVotes) + "`", true)
+                .addField("⭐", "`" + fmt(stats.favourites) + "`", true)
+                .setFooter("Last updated")
                 .setTimestamp(Instant.now())
                 .build();
     }

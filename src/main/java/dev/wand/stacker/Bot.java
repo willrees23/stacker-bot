@@ -7,6 +7,7 @@ import dev.wand.stacker.commands.FixCommand;
 import dev.wand.stacker.commands.InProgressCommand;
 import dev.wand.stacker.commands.InvestigateCommand;
 import dev.wand.stacker.commands.ResolvedCommand;
+import dev.wand.stacker.commands.StatsCommand;
 import dev.wand.stacker.commands.tester.TesterCommand;
 import dev.wand.stacker.config.Config;
 import dev.wand.stacker.listeners.ForumThreadListener;
@@ -80,7 +81,10 @@ public class Bot {
             
             // Register commands with Discord
             registerCommandsWithDiscord(commandManager);
-            
+
+            // Resume any live stats polls that were active before shutdown
+            StatsCommand.resumeLivePolls(jda);
+
             logger.info("All commands registered successfully!");
             
         } catch (Exception e) {
@@ -102,6 +106,7 @@ public class Bot {
         commandManager.registerCommand(new ResolvedCommand());
         commandManager.registerCommand(new DuplicateCommand());
         commandManager.registerCommand(new InvestigateCommand());
+        commandManager.registerCommand(new StatsCommand());
     }
     
     /**
