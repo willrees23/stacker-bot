@@ -1,8 +1,8 @@
 package dev.wand.stacker.commands;
 
 import dev.wand.stacker.embeds.EmbedManager;
+import dev.wand.stacker.repository.LiveStatsRepository;
 import dev.wand.stacker.services.GameStats;
-import dev.wand.stacker.services.LiveStatsStore;
 import dev.wand.stacker.services.RobloxApiService;
 import dev.wand.stacker.utils.PermissionUtils;
 import net.dv8tion.jda.api.JDA;
@@ -104,17 +104,40 @@ public class StatsCommand implements CommandInterface {
     private void trackLiveMessage(Message message) {
         String channelId = message.getChannel().getId();
         String messageId = message.getId();
+        addTracked(channelId, messageId, message.getJDA());
+    }
+
+    /**
+     * Register an existing bot message as a live-updating embed.
+     * Safe to call from any command (e.g. /stats-append).
+     *
+     * @param channelId The channel containing the message
+     * @param messageId The message to track
+     * @param jda       The JDA instance used to reach Discord
+     */
+    public static void addTracked(String channelId, String messageId, JDA jda) {
         String key = channelId + ":" + messageId;
 
         try {
-            LiveStatsStore.add(channelId, messageId);
+            LiveStatsRepository.add(channelId, messageId);
         } catch (Exception e) {
             logger.error("Failed to persist live stats entry {}", key, e);
         }
 
-        TRACKED.put(key, message.getJDA());
+        TRACKED.put(key, jda);
         ensurePollRunning();
         logger.info("Tracking live stats embed {} ({} total)", key, TRACKED.size());
+    }
+
+    /**
+     * Check whether a message is already in the live-tracking list.
+     *
+     * @param channelId The channel ID
+     * @param messageId The message ID
+     * @return {@code true} if the message is currently tracked
+     */
+    public static boolean isTracked(String channelId, String messageId) {
+        return TRACKED.containsKey(channelId + ":" + messageId);
     }
 
     /** Start the shared poll task if it isn't already running. */
@@ -133,9 +156,36 @@ public class StatsCommand implements CommandInterface {
     /**
      * Fetch stats once, then push the update to every tracked live embed.
      * Called every 2 minutes by the single shared poll task.
+     * Before fetching, all tracked embeds are updated to a loading state so
+     * users can see that a refresh is in progress.
      */
     private static void runSharedPoll() {
         if (TRACKED.isEmpty()) return;
+
+        // Snapshot keys to avoid concurrent-modification issues during iteration
+        Set<String> snapshot = Set.copyOf(TRACKED.keySet());
+
+        // Show loading state on all tracked embeds while the API request is in-flight
+        for (String key : snapshot) {
+            String[] parts = key.split(":", 2);
+            String channelId = parts[0];
+            String messageId = parts[1];
+            JDA jda = TRACKED.get(key);
+            if (jda == null) continue;
+
+            MessageChannel channel = (MessageChannel) jda.getChannelById(MessageChannel.class, channelId);
+            if (channel == null) {
+                logger.info("Live stats message {} removed from poll list (channel no longer found)", key);
+                removeTracked(key, channelId, messageId);
+                continue;
+            }
+
+            channel.editMessageEmbedsById(messageId, EmbedManager.createLoadingStatsEmbed())
+                    .queue(
+                            success -> logger.debug("Showed loading state for live stats embed {}", key),
+                            error -> logger.warn("Could not show loading state for embed {}: {}", key, error.getMessage())
+                    );
+        }
 
         GameStats stats;
         try {
@@ -145,11 +195,13 @@ public class StatsCommand implements CommandInterface {
             return;
         }
 
-        for (String key : TRACKED.keySet()) {
+        // Re-snapshot in case the map changed while the API call was in-flight
+        for (String key : Set.copyOf(TRACKED.keySet())) {
             String[] parts = key.split(":", 2);
             String channelId = parts[0];
             String messageId = parts[1];
             JDA jda = TRACKED.get(key);
+            if (jda == null) continue;
 
             MessageChannel channel = (MessageChannel) jda.getChannelById(MessageChannel.class, channelId);
             if (channel == null) {
@@ -173,7 +225,7 @@ public class StatsCommand implements CommandInterface {
     private static void removeTracked(String key, String channelId, String messageId) {
         TRACKED.remove(key);
         try {
-            LiveStatsStore.remove(channelId, messageId);
+            LiveStatsRepository.remove(channelId, messageId);
         } catch (Exception e) {
             logger.error("Failed to remove live stats entry {} from store", key, e);
         }
@@ -186,9 +238,9 @@ public class StatsCommand implements CommandInterface {
     public static void resumeLivePolls(JDA jda) {
         Set<String[]> entries;
         try {
-            entries = LiveStatsStore.readAll();
+            entries = LiveStatsRepository.readAll();
         } catch (Exception e) {
-            logger.error("Failed to read live_stats.txt on startup", e);
+            logger.error("Failed to read live stats embeds from database on startup", e);
             return;
         }
 
@@ -207,7 +259,7 @@ public class StatsCommand implements CommandInterface {
             if (channel == null) {
                 logger.warn("Live stats channel {} not found on resume; removing entry", channelId);
                 try {
-                    LiveStatsStore.remove(channelId, messageId);
+                    LiveStatsRepository.remove(channelId, messageId);
                 } catch (Exception ex) {
                     logger.error("Failed to remove stale entry {}", key, ex);
                 }

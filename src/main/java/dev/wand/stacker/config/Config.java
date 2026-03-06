@@ -39,6 +39,49 @@ public class Config {
         }
         return token;
     }
+
+    // -------------------------------------------------------------------------
+    // Database configuration (set via environment variables)
+    // -------------------------------------------------------------------------
+
+    /**
+     * JDBC connection URL for the PostgreSQL database.
+     * Constructed from DB_HOST (default: localhost), DB_PORT (default: 5432),
+     * and the required DB_NAME variable.
+     */
+    public static String getDbUrl() {
+        String host = getEnvOrDefault("DB_HOST", "localhost");
+        String port = getEnvOrDefault("DB_PORT", "5432");
+        String name = getRequiredEnv("DB_NAME");
+        return "jdbc:postgresql://" + host + ":" + port + "/" + name;
+    }
+
+    /** Database username. Read from {@code DB_USER} environment variable. */
+    public static String getDbUser() {
+        return getRequiredEnv("DB_USER");
+    }
+
+    /** Database password. Read from {@code DB_PASSWORD} environment variable. */
+    public static String getDbPassword() {
+        return getRequiredEnv("DB_PASSWORD");
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private static String getRequiredEnv(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isEmpty()) {
+            throw new IllegalStateException(name + " environment variable is not set");
+        }
+        return value;
+    }
+
+    private static String getEnvOrDefault(String name, String defaultValue) {
+        String value = System.getenv(name);
+        return (value != null && !value.isEmpty()) ? value : defaultValue;
+    }
     
     private Config() {
         // Utility class, prevent instantiation
