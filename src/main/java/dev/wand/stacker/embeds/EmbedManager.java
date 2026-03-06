@@ -258,8 +258,7 @@ public class EmbedManager {
     public static MessageEmbed createLiveStatsEmbed(GameStats stats) {
         long nextRefresh = Instant.now().plusSeconds(120).getEpochSecond();
         return new EmbedBuilder()
-                .setAuthor("🔴 LIVE")
-                .setTitle("📡 Stacker — Live Stats")
+                .setTitle("<a:earth_spin:1479522132273660128> Live Stats")
                 .setDescription("Refreshing <t:" + nextRefresh + ":R>")
                 .setColor(new Color(0xFF, 0x45, 0x00)) // Red-orange
                 .addField("Players", "`" + fmt(stats.playersOnline) + "`", true)
@@ -279,8 +278,7 @@ public class EmbedManager {
      */
     public static MessageEmbed createLoadingStatsEmbed() {
         return new EmbedBuilder()
-                .setAuthor("🔴 LIVE")
-                .setTitle("📡 Stacker — Live Stats")
+                .setTitle("<a:loading:1479520080906682369> Live Stats")
                 .setDescription("⏳ Fetching latest stats…")
                 .setColor(COLOR_WARNING)
                 .build();
