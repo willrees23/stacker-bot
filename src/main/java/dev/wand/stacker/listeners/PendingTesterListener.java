@@ -1,7 +1,7 @@
 package dev.wand.stacker.listeners;
 
 import dev.wand.stacker.config.Config;
-import dev.wand.stacker.utils.PendingTesterStore;
+import dev.wand.stacker.repository.PendingTesterRepository;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.sql.SQLException;
 
 public class PendingTesterListener extends ListenerAdapter {
 
@@ -23,9 +23,9 @@ public class PendingTesterListener extends ListenerAdapter {
 
         boolean pending;
         try {
-            pending = PendingTesterStore.isPendingTester(userId);
-        } catch (IOException e) {
-            logger.error("Failed to read pending tester store for user {}", userId, e);
+            pending = PendingTesterRepository.contains(userId);
+        } catch (SQLException e) {
+            logger.error("Failed to check pending tester list for user {}", userId, e);
             return;
         }
 
@@ -46,9 +46,9 @@ public class PendingTesterListener extends ListenerAdapter {
                 success1 -> guild.addRoleToMember(member, role2).queue(
                         success2 -> {
                             try {
-                                PendingTesterStore.removePendingTester(userId);
-                            } catch (IOException e) {
-                                logger.error("Failed to remove {} from pending tester store", userId, e);
+                                PendingTesterRepository.remove(userId);
+                            } catch (SQLException e) {
+                                logger.error("Failed to remove {} from pending tester list", userId, e);
                             }
                             logger.info("Assigned tester roles to pending user {} on join", member.getUser().getName());
                         },

@@ -11,6 +11,7 @@ import dev.wand.stacker.commands.StatsCommand;
 import dev.wand.stacker.commands.StatsAppendCommand;
 import dev.wand.stacker.commands.tester.TesterCommand;
 import dev.wand.stacker.config.Config;
+import dev.wand.stacker.db.Database;
 import dev.wand.stacker.listeners.ForumThreadListener;
 import dev.wand.stacker.listeners.PendingTesterListener;
 import net.dv8tion.jda.api.JDA;
@@ -52,6 +53,9 @@ public class Bot {
         try {
             logger.info("Starting Stacker Bot...");
             
+            // Initialise the database connection pool and create tables if needed
+            Database.initialize();
+
             // Get bot token from environment variable
             String token = Config.getBotToken();
             
@@ -85,6 +89,12 @@ public class Bot {
 
             // Resume any live stats polls that were active before shutdown
             StatsCommand.resumeLivePolls(jda);
+
+            // Gracefully close the database connection pool on JVM shutdown
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                logger.info("Shutdown hook: closing database connection pool");
+                Database.close();
+            }));
 
             logger.info("All commands registered successfully!");
             

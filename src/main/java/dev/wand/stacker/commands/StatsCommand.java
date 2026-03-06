@@ -1,8 +1,8 @@
 package dev.wand.stacker.commands;
 
 import dev.wand.stacker.embeds.EmbedManager;
+import dev.wand.stacker.repository.LiveStatsRepository;
 import dev.wand.stacker.services.GameStats;
-import dev.wand.stacker.services.LiveStatsStore;
 import dev.wand.stacker.services.RobloxApiService;
 import dev.wand.stacker.utils.PermissionUtils;
 import net.dv8tion.jda.api.JDA;
@@ -119,7 +119,7 @@ public class StatsCommand implements CommandInterface {
         String key = channelId + ":" + messageId;
 
         try {
-            LiveStatsStore.add(channelId, messageId);
+            LiveStatsRepository.add(channelId, messageId);
         } catch (Exception e) {
             logger.error("Failed to persist live stats entry {}", key, e);
         }
@@ -225,7 +225,7 @@ public class StatsCommand implements CommandInterface {
     private static void removeTracked(String key, String channelId, String messageId) {
         TRACKED.remove(key);
         try {
-            LiveStatsStore.remove(channelId, messageId);
+            LiveStatsRepository.remove(channelId, messageId);
         } catch (Exception e) {
             logger.error("Failed to remove live stats entry {} from store", key, e);
         }
@@ -238,9 +238,9 @@ public class StatsCommand implements CommandInterface {
     public static void resumeLivePolls(JDA jda) {
         Set<String[]> entries;
         try {
-            entries = LiveStatsStore.readAll();
+            entries = LiveStatsRepository.readAll();
         } catch (Exception e) {
-            logger.error("Failed to read live_stats.txt on startup", e);
+            logger.error("Failed to read live stats embeds from database on startup", e);
             return;
         }
 
@@ -259,7 +259,7 @@ public class StatsCommand implements CommandInterface {
             if (channel == null) {
                 logger.warn("Live stats channel {} not found on resume; removing entry", channelId);
                 try {
-                    LiveStatsStore.remove(channelId, messageId);
+                    LiveStatsRepository.remove(channelId, messageId);
                 } catch (Exception ex) {
                     logger.error("Failed to remove stale entry {}", key, ex);
                 }
