@@ -272,6 +272,20 @@ public class EmbedManager {
                 .build();
     }
 
+    /**
+     * Create a loading placeholder embed shown while the API request is in-flight.
+     *
+     * @return A yellow-styled MessageEmbed indicating that stats are being fetched
+     */
+    public static MessageEmbed createLoadingStatsEmbed() {
+        return new EmbedBuilder()
+                .setAuthor("🔴 LIVE")
+                .setTitle("📡 Stacker — Live Stats")
+                .setDescription("⏳ Fetching latest stats…")
+                .setColor(COLOR_WARNING)
+                .build();
+    }
+
     private EmbedManager() {
         // Utility class, prevent instantiation
     }

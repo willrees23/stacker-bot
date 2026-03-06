@@ -8,6 +8,7 @@ import dev.wand.stacker.commands.InProgressCommand;
 import dev.wand.stacker.commands.InvestigateCommand;
 import dev.wand.stacker.commands.ResolvedCommand;
 import dev.wand.stacker.commands.StatsCommand;
+import dev.wand.stacker.commands.StatsAppendCommand;
 import dev.wand.stacker.commands.tester.TesterCommand;
 import dev.wand.stacker.config.Config;
 import dev.wand.stacker.listeners.ForumThreadListener;
@@ -107,6 +108,7 @@ public class Bot {
         commandManager.registerCommand(new DuplicateCommand());
         commandManager.registerCommand(new InvestigateCommand());
         commandManager.registerCommand(new StatsCommand());
+        commandManager.registerCommand(new StatsAppendCommand());
     }
     
     /**
