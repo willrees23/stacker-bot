@@ -21,10 +21,10 @@
 
     <!-- Root logger -->
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
 
     <!-- Set JDA logging to WARN to reduce noise -->
-    <logger name="net.dv8tion.jda" level="WARN" />
+    <logger name="net.dv8tion.jda" level="WARN"/>
 </configuration>

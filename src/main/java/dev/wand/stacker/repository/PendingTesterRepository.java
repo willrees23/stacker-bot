@@ -20,6 +20,9 @@ public final class PendingTesterRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(PendingTesterRepository.class);
 
+    private PendingTesterRepository() {
+    }
+
     /**
      * Add a user to the pending-testers list.
      * Silently ignores duplicates (ON CONFLICT DO NOTHING).
@@ -70,6 +73,4 @@ public final class PendingTesterRepository {
             }
         }
     }
-
-    private PendingTesterRepository() {}
 }

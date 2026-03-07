@@ -22,6 +22,9 @@ public final class LiveStatsRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(LiveStatsRepository.class);
 
+    private LiveStatsRepository() {
+    }
+
     /**
      * Insert a live-stats embed location.
      * Silently ignores duplicate entries (ON CONFLICT DO NOTHING).
@@ -77,6 +80,4 @@ public final class LiveStatsRepository {
         }
         return results;
     }
-
-    private LiveStatsRepository() {}
 }

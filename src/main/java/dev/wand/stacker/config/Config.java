@@ -5,7 +5,7 @@ package dev.wand.stacker.config;
  * This class stores tag IDs, channel IDs, and role IDs as constants.
  */
 public class Config {
-    
+
     // Tag IDs for forum posts
     public static final String TAG_FIXED = "1473409315749498960";
     public static final String TAG_IN_PROGRESS = "1473409358732722459";
@@ -16,20 +16,28 @@ public class Config {
     public static final String TAG_FEEDBACK = "1473409393151180901";
     public static final String TAG_DUPLICATE = "1474731042610090074";
     public static final String TAG_INVESTIGATING = "1474727573991981219";
-    
+
     // Channel IDs
     public static final String CHANNEL_TESTER_LOG_FORUM = "1473013973334102251";
-    
+
     // Guild ID
     public static final String GUILD_ID = "1473013379902996542";
-    
+
     // Role IDs
     public static final String ROLE_REQUIRED = "1473026921158676480";
     public static final String ROLE_TESTER_1 = "1473013562371997879";
     public static final String ROLE_TESTER_2 = "1473013593405653115";
-    
+
     // Roblox game universe ID
     public static final String ROBLOX_UNIVERSE_ID = "9460688566";
+
+    private Config() {
+        // Utility class, prevent instantiation
+    }
+
+    // -------------------------------------------------------------------------
+    // Database configuration (set via environment variables)
+    // -------------------------------------------------------------------------
 
     // Bot token (should be set via environment variable)
     public static String getBotToken() {
@@ -39,10 +47,6 @@ public class Config {
         }
         return token;
     }
-
-    // -------------------------------------------------------------------------
-    // Database configuration (set via environment variables)
-    // -------------------------------------------------------------------------
 
     /**
      * JDBC connection URL for the PostgreSQL database.
@@ -56,19 +60,23 @@ public class Config {
         return "jdbc:postgresql://" + host + ":" + port + "/" + name;
     }
 
-    /** Database username. Read from {@code DB_USER} environment variable. */
+    /**
+     * Database username. Read from {@code DB_USER} environment variable.
+     */
     public static String getDbUser() {
         return getRequiredEnv("DB_USER");
-    }
-
-    /** Database password. Read from {@code DB_PASSWORD} environment variable. */
-    public static String getDbPassword() {
-        return getRequiredEnv("DB_PASSWORD");
     }
 
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Database password. Read from {@code DB_PASSWORD} environment variable.
+     */
+    public static String getDbPassword() {
+        return getRequiredEnv("DB_PASSWORD");
+    }
 
     private static String getRequiredEnv(String name) {
         String value = System.getenv(name);
@@ -81,9 +89,5 @@ public class Config {
     private static String getEnvOrDefault(String name, String defaultValue) {
         String value = System.getenv(name);
         return (value != null && !value.isEmpty()) ? value : defaultValue;
-    }
-    
-    private Config() {
-        // Utility class, prevent instantiation
     }
 }

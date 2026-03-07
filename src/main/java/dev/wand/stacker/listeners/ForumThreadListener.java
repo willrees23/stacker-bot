@@ -15,62 +15,62 @@ import java.util.List;
 
 /**
  * Listener that automatically applies the "Pending" tag to new forum threads.
- * 
+ * <p>
  * When a new thread is created in the Tester Log Forum, this listener:
  * 1. Validates that the thread belongs to the correct forum
  * 2. Checks if a status tag is already applied
  * 3. Applies the "Pending" tag automatically if no status tag exists
- * 
+ * <p>
  * This ensures all new bug reports start with a consistent status.
  */
 public class ForumThreadListener extends ListenerAdapter {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(ForumThreadListener.class);
-    
+
     @Override
     public void onChannelCreate(ChannelCreateEvent event) {
         // Check if the created channel is a thread
         if (!(event.getChannel() instanceof ThreadChannel)) {
             return;
         }
-        
+
         ThreadChannel thread = (ThreadChannel) event.getChannel();
-        
+
         // Check if this thread belongs to the Tester Log Forum
-        if (thread.getParentChannel() == null || 
-            !thread.getParentChannel().getId().equals(Config.CHANNEL_TESTER_LOG_FORUM)) {
+        if (thread.getParentChannel() == null ||
+                !thread.getParentChannel().getId().equals(Config.CHANNEL_TESTER_LOG_FORUM)) {
             return;
         }
-        
+
         // Verify the parent is a forum channel
         if (!(thread.getParentChannel() instanceof ForumChannel)) {
             return;
         }
-        
+
         ForumChannel forumChannel = (ForumChannel) thread.getParentChannel();
-        
+
         // Find the Pending tag
         ForumTag pendingTag = forumChannel.getAvailableTags().stream()
                 .filter(tag -> tag.getId().equals(Config.TAG_PENDING))
                 .findFirst()
                 .orElse(null);
-        
+
         if (pendingTag == null) {
             logger.warn("Pending tag not found in forum: {}", forumChannel.getName());
             return;
         }
-        
+
         // Get current tags and add the Pending tag if not already present
         List<ForumTag> currentTags = new ArrayList<>(thread.getAppliedTags());
-        
+
         // Check if a status tag is already applied
         boolean hasStatusTag = currentTags.stream()
                 .anyMatch(ValidationUtils::isStatusTag);
-        
+
         // Only add Pending tag if no status tag is present
         if (!hasStatusTag) {
             currentTags.add(pendingTag);
-            
+
             // Apply the tags
             thread.getManager().setAppliedTags(currentTags).queue(
                     success -> logger.info("Automatically applied Pending tag to new thread: {}", thread.getName()),
