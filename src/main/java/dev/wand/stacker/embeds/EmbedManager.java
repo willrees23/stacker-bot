@@ -260,7 +260,7 @@ public class EmbedManager {
         return new EmbedBuilder()
                 .setTitle("<a:earth_spin:1479522132273660128> Live Stats")
                 .setDescription("Refreshing <t:" + nextRefresh + ":R>")
-                .setColor(new Color(0xFF, 0x45, 0x00)) // Red-orange
+                .setColor(COLOR_SUCCESS) // Red-orange
                 .addField("Players", "`" + fmt(stats.playersOnline) + "`", true)
                 .addField("Servers", "`" + fmt(stats.serverCount) + "`", true)
                 .addField("Visits", "`" + fmt(stats.visits) + "`", true)
@@ -279,8 +279,26 @@ public class EmbedManager {
     public static MessageEmbed createLoadingStatsEmbed() {
         return new EmbedBuilder()
                 .setTitle("<a:loading:1479520080906682369> Live Stats")
-                .setDescription("⏳ Fetching latest stats…")
+                .setDescription("Fetching latest stats…")
                 .setColor(COLOR_WARNING)
+                .build();
+    }
+
+    /**
+     * Create an error embed shown when the live stats API request fails.
+     * Includes a Discord relative-timestamp countdown to the next poll.
+     *
+     * @param nextPollEpochSeconds The epoch second when the next poll will occur
+     * @return A red-styled MessageEmbed indicating that the fetch failed
+     */
+    public static MessageEmbed createErrorStatsEmbed(long nextPollEpochSeconds) {
+        return new EmbedBuilder()
+                .setTitle("⚠️ Live Stats — Error")
+                .setDescription("Failed to fetch stats.\n\n"
+                        + "Retrying <t:" + nextPollEpochSeconds + ":R>")
+                .setColor(COLOR_ERROR)
+                .setFooter("Last attempt failed")
+                .setTimestamp(Instant.now())
                 .build();
     }
 

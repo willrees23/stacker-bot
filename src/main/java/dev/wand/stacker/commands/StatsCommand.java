@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -192,6 +193,31 @@ public class StatsCommand implements CommandInterface {
             stats = RobloxApiService.fetchStats();
         } catch (Exception e) {
             logger.error("Shared poll: failed to fetch game stats", e);
+
+            // Show error embed with countdown to the next poll on all tracked embeds
+            long nextPoll = Instant.now().plusSeconds(120).getEpochSecond();
+            for (String key : Set.copyOf(TRACKED.keySet())) {
+                String[] errParts = key.split(":", 2);
+                String errChannelId = errParts[0];
+                String errMessageId = errParts[1];
+                JDA errJda = TRACKED.get(key);
+                if (errJda == null) continue;
+
+                MessageChannel errChannel = errJda.getChannelById(MessageChannel.class, errChannelId);
+                if (errChannel == null) {
+                    removeTracked(key, errChannelId, errMessageId);
+                    continue;
+                }
+
+                errChannel.editMessageEmbedsById(errMessageId, EmbedManager.createErrorStatsEmbed(nextPoll))
+                        .queue(
+                                success -> logger.debug("Showed error state for live stats embed {}", key),
+                                err -> {
+                                    logger.info("Live stats message {} removed from poll list ({})", key, err.getMessage());
+                                    removeTracked(key, errChannelId, errMessageId);
+                                }
+                        );
+            }
             return;
         }
 
