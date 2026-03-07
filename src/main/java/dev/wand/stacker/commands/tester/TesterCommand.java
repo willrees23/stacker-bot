@@ -17,40 +17,40 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Command to assign tester roles to a user.
- * 
+ * <p>
  * Usage: /tester <user>
- * 
- * This command assigns both tester roles (ROLE_TESTER_1 and ROLE_TESTER_2) 
+ * <p>
+ * This command assigns both tester roles (ROLE_TESTER_1 and ROLE_TESTER_2)
  * to the specified user.
- * 
+ * <p>
  * Requirements:
  * - User must have the required role (checked by CommandManager)
  * - Target user must be a member of the guild
  * - Bot must have permission to manage roles
  */
 public class TesterCommand implements CommandInterface {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(TesterCommand.class);
-    
+
     @Override
     public String getName() {
         return "tester";
     }
-    
+
     @Override
     public CommandData getCommandData() {
         return Commands.slash("tester", "Assign tester roles to a user")
                 .addOption(OptionType.USER, "user", "The user to assign tester roles to", true);
     }
-    
+
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // Defer the reply since role assignment might take a moment
         event.deferReply().queue();
-        
+
         User targetUser = event.getOption("user").getAsUser();
         Guild guild = event.getGuild();
-        
+
         if (guild == null) {
             event.getHook().editOriginalEmbeds(EmbedManager.createError(
                     "Error",
@@ -58,7 +58,7 @@ public class TesterCommand implements CommandInterface {
             )).queue();
             return;
         }
-        
+
         // Get the member object for the target user
         guild.retrieveMember(targetUser).queue(
                 targetMember -> assignTesterRoles(event, guild, targetMember),
@@ -75,18 +75,18 @@ public class TesterCommand implements CommandInterface {
                 }
         );
     }
-    
+
     /**
      * Assign both tester roles to the target member.
-     * 
-     * @param event The command event
-     * @param guild The guild where the command was executed
+     *
+     * @param event        The command event
+     * @param guild        The guild where the command was executed
      * @param targetMember The member to assign roles to
      */
     private void assignTesterRoles(SlashCommandInteractionEvent event, Guild guild, Member targetMember) {
         Role role1 = guild.getRoleById(Config.ROLE_TESTER_1);
         Role role2 = guild.getRoleById(Config.ROLE_TESTER_2);
-        
+
         if (role1 == null || role2 == null) {
             logger.error("Tester roles not found in guild: {}", guild.getName());
             event.getHook().editOriginalEmbeds(EmbedManager.createError(
@@ -95,7 +95,7 @@ public class TesterCommand implements CommandInterface {
             )).queue();
             return;
         }
-        
+
         // Add both roles
         guild.addRoleToMember(targetMember, role1).queue(
                 success1 -> guild.addRoleToMember(targetMember, role2).queue(

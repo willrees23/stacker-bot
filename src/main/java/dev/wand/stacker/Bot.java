@@ -1,14 +1,6 @@
 package dev.wand.stacker;
 
-import dev.wand.stacker.commands.CommandInterface;
-import dev.wand.stacker.commands.CommandManager;
-import dev.wand.stacker.commands.DuplicateCommand;
-import dev.wand.stacker.commands.FixCommand;
-import dev.wand.stacker.commands.InProgressCommand;
-import dev.wand.stacker.commands.InvestigateCommand;
-import dev.wand.stacker.commands.ResolvedCommand;
-import dev.wand.stacker.commands.StatsCommand;
-import dev.wand.stacker.commands.StatsAppendCommand;
+import dev.wand.stacker.commands.*;
 import dev.wand.stacker.commands.tester.TesterCommand;
 import dev.wand.stacker.config.Config;
 import dev.wand.stacker.db.Database;
@@ -23,45 +15,45 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Main bot class - Entry point for the Stacker Discord Bot.
- * 
+ * <p>
  * This bot uses JDA (Java Discord API) to interact with Discord.
  * It implements a modular command system with proper permission checking
  * and a centralized embed management system.
- * 
+ * <p>
  * Architecture:
  * - Commands are registered with CommandManager
  * - All commands require the configured role (automatic check)
  * - Embeds are managed centrally through EmbedManager
  * - Configuration is stored in Config class
  * - Event listeners handle automatic actions (e.g., auto-tagging new threads)
- * 
+ * <p>
  * To add a new command:
  * 1. Create a class that implements CommandInterface in the commands package
  * 2. Implement the required methods (getName, getCommandData, execute)
  * 3. Register it in the setupCommands() method
  * 4. The command will automatically have permission checks applied
- * 
+ * <p>
  * Environment Variables Required:
  * - DISCORD_BOT_TOKEN: Your Discord bot token
  */
 public class Bot {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(Bot.class);
     private static JDA jda;
-    
+
     public static void main(String[] args) {
         try {
             logger.info("Starting Stacker Bot...");
-            
+
             // Initialise the database connection pool and create tables if needed
             Database.initialize();
 
             // Get bot token from environment variable
             String token = Config.getBotToken();
-            
+
             // Create CommandManager
             CommandManager commandManager = new CommandManager();
-            
+
             // Create event listeners
             ForumThreadListener forumThreadListener = new ForumThreadListener();
             PendingTesterListener pendingTesterListener = new PendingTesterListener();
@@ -76,14 +68,14 @@ public class Bot {
                     .setActivity(Activity.watching("for bugs"))
                     .addEventListeners(commandManager, forumThreadListener, pendingTesterListener)
                     .build();
-            
+
             // Wait for JDA to be ready
             jda.awaitReady();
             logger.info("Bot is ready!");
-            
+
             // Register commands with the CommandManager
             setupCommands(commandManager);
-            
+
             // Register commands with Discord
             registerCommandsWithDiscord(commandManager);
 
@@ -97,17 +89,17 @@ public class Bot {
             }));
 
             logger.info("All commands registered successfully!");
-            
+
         } catch (Exception e) {
             logger.error("Failed to start bot", e);
             System.exit(1);
         }
     }
-    
+
     /**
      * Register all commands with the CommandManager.
      * Add new commands here to make them available.
-     * 
+     *
      * @param commandManager The command manager instance
      */
     private static void setupCommands(CommandManager commandManager) {
@@ -120,12 +112,12 @@ public class Bot {
         commandManager.registerCommand(new StatsCommand());
         commandManager.registerCommand(new StatsAppendCommand());
     }
-    
+
     /**
      * Register all commands with Discord.
      * This updates the slash commands available in Discord.
      * Commands are registered to the specific guild for immediate availability.
-     * 
+     *
      * @param commandManager The command manager with registered commands
      */
     private static void registerCommandsWithDiscord(CommandManager commandManager) {
@@ -136,7 +128,7 @@ public class Bot {
             logger.error("Guild with ID {} not found. Bot may not be a member of this guild.", Config.GUILD_ID);
             return;
         }
-        
+
         guild.updateCommands()
                 .addCommands(
                         commandManager.getCommands().values().stream()
@@ -148,11 +140,11 @@ public class Bot {
                         error -> logger.error("Failed to register commands with guild", error)
                 );
     }
-    
+
     /**
      * Get the JDA instance.
      * Useful for accessing the JDA API from other classes.
-     * 
+     *
      * @return The JDA instance
      */
     public static JDA getJDA() {

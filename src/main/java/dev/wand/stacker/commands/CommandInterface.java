@@ -5,10 +5,10 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 /**
  * Base interface for all bot commands.
- * 
+ * <p>
  * All commands must implement this interface to be registered with the CommandManager.
  * The interface provides a contract for command execution and registration.
- * 
+ * <p>
  * To add a new command:
  * 1. Create a new class that implements CommandInterface
  * 2. Implement getName() to return the command name
@@ -17,23 +17,23 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
  * 5. Register the command in Bot.java's CommandManager
  */
 public interface CommandInterface {
-    
+
     /**
      * Get the name of the command.
      * This should match the command name in the CommandData.
-     * 
+     *
      * @return The command name (e.g., "tester", "bug")
      */
     String getName();
-    
+
     /**
      * Get the CommandData for registering this command with Discord.
      * This defines the slash command structure, including options and subcommands.
-     * 
+     *
      * @return CommandData for Discord registration
      */
     CommandData getCommandData();
-    
+
     /**
      * Whether this command requires the staff role to use.
      * Override and return false to make a command available to all users.

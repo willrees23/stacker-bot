@@ -16,96 +16,32 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * /stats — Displays live Roblox game statistics.
- *
+ * <p>
  * Available to all users. The optional {@code admin:true} flag sends a non-ephemeral
  * embed that auto-refreshes every 2 minutes (staff only).
- *
+ * <p>
  * All live embeds share a single poll: one API fetch per cycle updates every tracked message.
  */
 public class StatsCommand implements CommandInterface {
 
-    private static final Logger logger = LoggerFactory.getLogger(StatsCommand.class);
-
     static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(2);
-
     /**
      * All currently tracked live embeds: "channelId:messageId" → JDA instance.
      * A single shared poll task iterates this map each cycle.
      */
     static final ConcurrentHashMap<String, JDA> TRACKED = new ConcurrentHashMap<>();
-
-    /** The single shared 2-minute poll task, started lazily when the first live embed is created. */
-    private static volatile ScheduledFuture<?> pollTask = null;
+    private static final Logger logger = LoggerFactory.getLogger(StatsCommand.class);
     private static final Object POLL_LOCK = new Object();
-
-    @Override
-    public String getName() {
-        return "stats";
-    }
-
-    @Override
-    public boolean requiresPermission() {
-        return false;
-    }
-
-    @Override
-    public CommandData getCommandData() {
-        return Commands.slash("stats", "View live game stats for Stacker")
-                .addOption(OptionType.BOOLEAN, "admin",
-                        "Send as live, auto-updating embed (staff only)", false);
-    }
-
-    @Override
-    public void execute(SlashCommandInteractionEvent event) {
-        OptionMapping adminOption = event.getOption("admin");
-        boolean admin = adminOption != null && adminOption.getAsBoolean();
-
-        if (admin && !PermissionUtils.hasRequiredRole(event.getMember())) {
-            event.replyEmbeds(EmbedManager.createPermissionDeniedEmbed())
-                    .setEphemeral(true)
-                    .queue();
-            return;
-        }
-
-        event.deferReply(!admin).queue();
-
-        SCHEDULER.submit(() -> {
-            try {
-                GameStats stats = RobloxApiService.fetchStats();
-                if (admin) {
-                    event.getHook().editOriginalEmbeds(EmbedManager.createLiveStatsEmbed(stats))
-                            .queue(this::trackLiveMessage);
-                } else {
-                    event.getHook().editOriginalEmbeds(EmbedManager.createStatsEmbed(stats)).queue();
-                }
-            } catch (Exception e) {
-                logger.error("Failed to fetch game stats", e);
-                event.getHook().editOriginalEmbeds(
-                        EmbedManager.createError("Stats Unavailable",
-                                "Could not retrieve game stats. Please try again later.")
-                ).queue();
-            }
-        });
-    }
-
-    // -------------------------------------------------------------------------
-    // Tracking & shared poll
-    // -------------------------------------------------------------------------
-
-    private void trackLiveMessage(Message message) {
-        String channelId = message.getChannel().getId();
-        String messageId = message.getId();
-        addTracked(channelId, messageId, message.getJDA());
-    }
+    /**
+     * The single shared 2-minute poll task, started lazily when the first live embed is created.
+     */
+    private static volatile ScheduledFuture<?> pollTask = null;
 
     /**
      * Register an existing bot message as a live-updating embed.
@@ -140,7 +76,9 @@ public class StatsCommand implements CommandInterface {
         return TRACKED.containsKey(channelId + ":" + messageId);
     }
 
-    /** Start the shared poll task if it isn't already running. */
+    /**
+     * Start the shared poll task if it isn't already running.
+     */
     private static void ensurePollRunning() {
         synchronized (POLL_LOCK) {
             if (pollTask == null || pollTask.isCancelled() || pollTask.isDone()) {
@@ -192,6 +130,31 @@ public class StatsCommand implements CommandInterface {
             stats = RobloxApiService.fetchStats();
         } catch (Exception e) {
             logger.error("Shared poll: failed to fetch game stats", e);
+
+            // Show error embed with countdown to the next poll on all tracked embeds
+            long nextPoll = Instant.now().plusSeconds(120).getEpochSecond();
+            for (String key : Set.copyOf(TRACKED.keySet())) {
+                String[] errParts = key.split(":", 2);
+                String errChannelId = errParts[0];
+                String errMessageId = errParts[1];
+                JDA errJda = TRACKED.get(key);
+                if (errJda == null) continue;
+
+                MessageChannel errChannel = errJda.getChannelById(MessageChannel.class, errChannelId);
+                if (errChannel == null) {
+                    removeTracked(key, errChannelId, errMessageId);
+                    continue;
+                }
+
+                errChannel.editMessageEmbedsById(errMessageId, EmbedManager.createErrorStatsEmbed(nextPoll))
+                        .queue(
+                                success -> logger.debug("Showed error state for live stats embed {}", key),
+                                err -> {
+                                    logger.info("Live stats message {} removed from poll list ({})", key, err.getMessage());
+                                    removeTracked(key, errChannelId, errMessageId);
+                                }
+                        );
+            }
             return;
         }
 
@@ -221,6 +184,10 @@ public class StatsCommand implements CommandInterface {
                     );
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Tracking & shared poll
+    // -------------------------------------------------------------------------
 
     private static void removeTracked(String key, String channelId, String messageId) {
         TRACKED.remove(key);
@@ -274,5 +241,61 @@ public class StatsCommand implements CommandInterface {
             ensurePollRunning();
             logger.info("Resumed shared poll for {} live embed(s)", TRACKED.size());
         }
+    }
+
+    @Override
+    public String getName() {
+        return "stats";
+    }
+
+    @Override
+    public boolean requiresPermission() {
+        return false;
+    }
+
+    @Override
+    public CommandData getCommandData() {
+        return Commands.slash("stats", "View live game stats for Stacker")
+                .addOption(OptionType.BOOLEAN, "admin",
+                        "Send as live, auto-updating embed (staff only)", false);
+    }
+
+    @Override
+    public void execute(SlashCommandInteractionEvent event) {
+        OptionMapping adminOption = event.getOption("admin");
+        boolean admin = adminOption != null && adminOption.getAsBoolean();
+
+        if (admin && !PermissionUtils.hasRequiredRole(event.getMember())) {
+            event.replyEmbeds(EmbedManager.createPermissionDeniedEmbed())
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        event.deferReply(!admin).queue();
+
+        SCHEDULER.submit(() -> {
+            try {
+                GameStats stats = RobloxApiService.fetchStats();
+                if (admin) {
+                    event.getHook().editOriginalEmbeds(EmbedManager.createLiveStatsEmbed(stats))
+                            .queue(this::trackLiveMessage);
+                } else {
+                    event.getHook().editOriginalEmbeds(EmbedManager.createStatsEmbed(stats)).queue();
+                }
+            } catch (Exception e) {
+                logger.error("Failed to fetch game stats", e);
+                event.getHook().editOriginalEmbeds(
+                        EmbedManager.createError("Stats Unavailable",
+                                "Could not retrieve game stats. Please try again later.")
+                ).queue();
+            }
+        });
+    }
+
+    private void trackLiveMessage(Message message) {
+        String channelId = message.getChannel().getId();
+        String messageId = message.getId();
+        addTracked(channelId, messageId, message.getJDA());
     }
 }

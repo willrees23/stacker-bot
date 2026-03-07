@@ -39,6 +39,9 @@ public final class Database {
     // Lifecycle
     // -------------------------------------------------------------------------
 
+    private Database() {
+    }
+
     /**
      * Initialize the connection pool and create any missing tables.
      * Must be called once before any repository is used.
@@ -83,17 +86,19 @@ public final class Database {
         return dataSource.getConnection();
     }
 
-    /** Close the connection pool on graceful shutdown. */
+    // -------------------------------------------------------------------------
+    // Schema
+    // -------------------------------------------------------------------------
+
+    /**
+     * Close the connection pool on graceful shutdown.
+     */
     public static void close() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
             logger.info("Database connection pool closed");
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Schema
-    // -------------------------------------------------------------------------
 
     /**
      * Create all required tables if they do not already exist.
@@ -125,6 +130,4 @@ public final class Database {
             throw new RuntimeException("Failed to create database tables", e);
         }
     }
-
-    private Database() {}
 }

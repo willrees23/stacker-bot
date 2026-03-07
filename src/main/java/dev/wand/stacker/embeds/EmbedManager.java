@@ -4,7 +4,7 @@ import dev.wand.stacker.services.GameStats;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
-import java.awt.Color;
+import java.awt.*;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -15,22 +15,28 @@ import java.util.Locale;
  * Centralized manager for all bot embeds.
  * This class provides methods to create consistent, well-formatted embeds
  * for various bot responses and messages.
- * 
+ * <p>
  * All embeds are defined here to ensure consistency and easy customization.
  * To add a new embed type, simply add a new static method that returns a MessageEmbed.
  */
 public class EmbedManager {
-    
+
     // Color scheme for different embed types
     private static final Color COLOR_SUCCESS = new Color(87, 242, 135); // Green
     private static final Color COLOR_ERROR = new Color(237, 66, 69); // Red
     private static final Color COLOR_INFO = new Color(88, 101, 242); // Discord Blurple
     private static final Color COLOR_WARNING = new Color(254, 231, 92); // Yellow
-    
+    private static final DateTimeFormatter TIME_FMT =
+            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneOffset.UTC);
+
+    private EmbedManager() {
+        // Utility class, prevent instantiation
+    }
+
     /**
      * Create a success embed with a custom message.
-     * 
-     * @param title The embed title
+     *
+     * @param title       The embed title
      * @param description The embed description
      * @return A success-styled MessageEmbed
      */
@@ -42,11 +48,11 @@ public class EmbedManager {
                 .setTimestamp(Instant.now())
                 .build();
     }
-    
+
     /**
      * Create an error embed with a custom message.
-     * 
-     * @param title The embed title
+     *
+     * @param title       The embed title
      * @param description The embed description
      * @return An error-styled MessageEmbed
      */
@@ -58,11 +64,11 @@ public class EmbedManager {
                 .setTimestamp(Instant.now())
                 .build();
     }
-    
+
     /**
      * Create an info embed with a custom message.
-     * 
-     * @param title The embed title
+     *
+     * @param title       The embed title
      * @param description The embed description
      * @return An info-styled MessageEmbed
      */
@@ -74,11 +80,11 @@ public class EmbedManager {
                 .setTimestamp(Instant.now())
                 .build();
     }
-    
+
     /**
      * Create the embed for when a bug is marked as fixed.
      * This is sent when the /bug fix command is used.
-     * 
+     *
      * @return The bug fixed embed
      */
     public static MessageEmbed createBugFixedEmbed() {
@@ -91,11 +97,11 @@ public class EmbedManager {
                 .setFooter("Stacker Bot", null)
                 .build();
     }
-    
+
     /**
      * Create the embed for when a bug is marked as in progress.
      * This is sent when the /bug in-progress command is used.
-     * 
+     *
      * @return The bug in progress embed
      */
     public static MessageEmbed createBugInProgressEmbed() {
@@ -108,11 +114,11 @@ public class EmbedManager {
                 .setFooter("Stacker Bot", null)
                 .build();
     }
-    
+
     /**
      * Create the embed for when a bug is marked as resolved.
      * This is sent when the /bug resolved command is used.
-     * 
+     *
      * @return The bug resolved embed
      */
     public static MessageEmbed createBugResolvedEmbed() {
@@ -125,7 +131,7 @@ public class EmbedManager {
                 .setFooter("Stacker Bot", null)
                 .build();
     }
-    
+
     /**
      * Create the embed for when a bug is being investigated.
      * This is sent when the /investigate command is used.
@@ -164,7 +170,7 @@ public class EmbedManager {
 
     /**
      * Create the embed for permission denied errors.
-     * 
+     *
      * @return The permission denied embed
      */
     public static MessageEmbed createPermissionDeniedEmbed() {
@@ -175,10 +181,10 @@ public class EmbedManager {
                 .setTimestamp(Instant.now())
                 .build();
     }
-    
+
     /**
      * Create the embed for when a command is used in the wrong context.
-     * 
+     *
      * @param requirement The requirement that was not met
      * @return The invalid context embed
      */
@@ -190,10 +196,10 @@ public class EmbedManager {
                 .setTimestamp(Instant.now())
                 .build();
     }
-    
+
     /**
      * Create the embed for successful tester role assignment.
-     * 
+     *
      * @param username The username of the user who received the roles
      * @return The roles assigned embed
      */
@@ -205,7 +211,7 @@ public class EmbedManager {
                 .setTimestamp(Instant.now())
                 .build();
     }
-    
+
     /**
      * Create the embed for when a tester is queued for role assignment on join.
      *
@@ -221,9 +227,6 @@ public class EmbedManager {
                 .setTimestamp(Instant.now())
                 .build();
     }
-
-    private static final DateTimeFormatter TIME_FMT =
-            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneOffset.UTC);
 
     private static String fmt(long n) {
         return NumberFormat.getInstance(Locale.US).format(n);
@@ -260,7 +263,7 @@ public class EmbedManager {
         return new EmbedBuilder()
                 .setTitle("<a:earth_spin:1479522132273660128> Live Stats")
                 .setDescription("Refreshing <t:" + nextRefresh + ":R>")
-                .setColor(new Color(0xFF, 0x45, 0x00)) // Red-orange
+                .setColor(COLOR_SUCCESS) // Red-orange
                 .addField("Players", "`" + fmt(stats.playersOnline) + "`", true)
                 .addField("Servers", "`" + fmt(stats.serverCount) + "`", true)
                 .addField("Visits", "`" + fmt(stats.visits) + "`", true)
@@ -279,12 +282,26 @@ public class EmbedManager {
     public static MessageEmbed createLoadingStatsEmbed() {
         return new EmbedBuilder()
                 .setTitle("<a:loading:1479520080906682369> Live Stats")
-                .setDescription("⏳ Fetching latest stats…")
+                .setDescription("Fetching latest stats…")
                 .setColor(COLOR_WARNING)
                 .build();
     }
 
-    private EmbedManager() {
-        // Utility class, prevent instantiation
+    /**
+     * Create an error embed shown when the live stats API request fails.
+     * Includes a Discord relative-timestamp countdown to the next poll.
+     *
+     * @param nextPollEpochSeconds The epoch second when the next poll will occur
+     * @return A red-styled MessageEmbed indicating that the fetch failed
+     */
+    public static MessageEmbed createErrorStatsEmbed(long nextPollEpochSeconds) {
+        return new EmbedBuilder()
+                .setTitle("⚠️ Live Stats — Error")
+                .setDescription("Failed to fetch stats.\n\n"
+                        + "Retrying <t:" + nextPollEpochSeconds + ":R>")
+                .setColor(COLOR_ERROR)
+                .setFooter("Last attempt failed")
+                .setTimestamp(Instant.now())
+                .build();
     }
 }

@@ -13,63 +13,63 @@ import java.util.Map;
 
 /**
  * Central command manager that handles command registration and routing.
- * 
+ * <p>
  * This class:
  * - Registers all commands with the bot
  * - Routes incoming slash command events to the appropriate command handler
  * - Performs permission checks before executing commands
  * - Provides centralized error handling
- * 
+ * <p>
  * To add a new command:
  * 1. Create a class that implements CommandInterface
  * 2. Call registerCommand() with an instance of your command class
  * 3. The command will automatically be available and permission-checked
  */
 public class CommandManager extends ListenerAdapter {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(CommandManager.class);
     private final Map<String, CommandInterface> commands = new HashMap<>();
-    
+
     /**
      * Register a command with the manager.
      * The command will be added to the internal registry and made available for execution.
-     * 
+     *
      * @param command The command to register
      */
     public void registerCommand(CommandInterface command) {
         commands.put(command.getName().toLowerCase(), command);
         logger.info("Registered command: {}", command.getName());
     }
-    
+
     /**
      * Get all registered commands.
      * Used for registering commands with Discord.
-     * 
+     *
      * @return Map of command name to command instance
      */
     public Map<String, CommandInterface> getCommands() {
         return commands;
     }
-    
+
     /**
      * Handle incoming slash command events.
      * This method:
      * 1. Finds the appropriate command handler
      * 2. Checks if the user has the required role
      * 3. Executes the command or sends an error message
-     * 
+     *
      * @param event The slash command interaction event
      */
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         String commandName = event.getName().toLowerCase();
         CommandInterface command = commands.get(commandName);
-        
+
         if (command == null) {
             logger.warn("Unknown command: {}", commandName);
             return;
         }
-        
+
         // Check permissions (skipped for commands that opt out)
         Member member = event.getMember();
         if (command.requiresPermission() && !PermissionUtils.hasRequiredRole(member)) {
@@ -81,11 +81,11 @@ public class CommandManager extends ListenerAdapter {
                     commandName);
             return;
         }
-        
+
         // Execute the command
         try {
-            logger.info("Executing command: {} by user: {}", 
-                    commandName, 
+            logger.info("Executing command: {} by user: {}",
+                    commandName,
                     member != null ? member.getUser().getName() : "Unknown");
             command.execute(event);
         } catch (Exception e) {

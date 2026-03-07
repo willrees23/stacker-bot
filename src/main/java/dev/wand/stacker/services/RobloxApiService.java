@@ -26,12 +26,15 @@ public class RobloxApiService {
 
     private static final Logger logger = LoggerFactory.getLogger(RobloxApiService.class);
     private static final String ROTUNNEL_BASE = "https://games.rotunnel.com/v1";
-    private static final String ROBLOX_BASE   = "https://games.roblox.com/v1";
-    private static final int    MAX_SERVER_PAGES = 10;
+    private static final String ROBLOX_BASE = "https://games.roblox.com/v1";
+    private static final int MAX_SERVER_PAGES = 10;
 
     private static final HttpClient HTTP = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
+
+    private RobloxApiService() {
+    }
 
     /**
      * Fetch current game stats for the configured universe.
@@ -45,9 +48,9 @@ public class RobloxApiService {
         // --- 1. Game details (players, visits, favourites, rootPlaceId) ---
         JsonObject gameData = getFirst(fetch(ROTUNNEL_BASE + "/games?universeIds=" + universeId), "data");
         long playersOnline = gameData.get("playing").getAsLong();
-        long visits        = gameData.get("visits").getAsLong();
-        long favourites    = gameData.get("favoritedCount").getAsLong();
-        String placeId     = gameData.get("rootPlaceId").getAsString();
+        long visits = gameData.get("visits").getAsLong();
+        long favourites = gameData.get("favoritedCount").getAsLong();
+        String placeId = gameData.get("rootPlaceId").getAsString();
 
         // --- 2. Vote counts ---
         JsonObject votesData = fetch(ROTUNNEL_BASE + "/games/" + universeId + "/votes");
@@ -101,13 +104,13 @@ public class RobloxApiService {
         }
     }
 
-    /** Extract the first element of a named JSON array. */
+    /**
+     * Extract the first element of a named JSON array.
+     */
     private static JsonObject getFirst(JsonObject root, String arrayKey) throws IOException {
         if (!root.has(arrayKey) || root.getAsJsonArray(arrayKey).isEmpty()) {
             throw new IOException("Empty '" + arrayKey + "' in response");
         }
         return root.getAsJsonArray(arrayKey).get(0).getAsJsonObject();
     }
-
-    private RobloxApiService() {}
 }
