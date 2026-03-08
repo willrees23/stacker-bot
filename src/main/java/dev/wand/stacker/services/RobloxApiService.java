@@ -18,14 +18,13 @@ import java.time.Instant;
  * Fetches live game statistics from the Roblox API.
  *
  * <ul>
- *   <li>Game details + vote counts — via rotunnel.com (proxies the Roblox API)</li>
+ *   <li>Game details + vote counts — via games.roblox.com</li>
  *   <li>Server count — directly from games.roblox.com using the place ID</li>
  * </ul>
  */
 public class RobloxApiService {
 
     private static final Logger logger = LoggerFactory.getLogger(RobloxApiService.class);
-    private static final String ROTUNNEL_BASE = "https://games.rotunnel.com/v1";
     private static final String ROBLOX_BASE = "https://games.roblox.com/v1";
     private static final int MAX_SERVER_PAGES = 10;
 
@@ -46,14 +45,14 @@ public class RobloxApiService {
         String universeId = Config.ROBLOX_UNIVERSE_ID;
 
         // --- 1. Game details (players, visits, favourites, rootPlaceId) ---
-        JsonObject gameData = getFirst(fetch(ROTUNNEL_BASE + "/games?universeIds=" + universeId), "data");
+        JsonObject gameData = getFirst(fetch(ROBLOX_BASE + "/games?universeIds=" + universeId), "data");
         long playersOnline = gameData.get("playing").getAsLong();
         long visits = gameData.get("visits").getAsLong();
         long favourites = gameData.get("favoritedCount").getAsLong();
         String placeId = gameData.get("rootPlaceId").getAsString();
 
         // --- 2. Vote counts ---
-        JsonObject votesData = fetch(ROTUNNEL_BASE + "/games/" + universeId + "/votes");
+        JsonObject votesData = fetch(ROBLOX_BASE + "/games/" + universeId + "/votes");
         long upVotes = votesData.get("upVotes").getAsLong();
 
         // --- 3. Server count (paginated via games.roblox.com) ---
