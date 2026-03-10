@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
  * Main bot class - Entry point for the Stacker Discord Bot.
  * <p>
@@ -123,22 +125,26 @@ public class Bot {
     private static void registerCommandsWithDiscord(CommandManager commandManager) {
         // Register commands to the specific guild for immediate availability
         // Guild commands are available immediately (no 1-hour wait like global commands)
-        var guild = jda.getGuildById(Config.GUILD_ID);
-        if (guild == null) {
-            logger.error("Guild with ID {} not found. Bot may not be a member of this guild.", Config.GUILD_ID);
-            return;
-        }
+        var guildIds = List.of(Config.MAIN_GUILD_ID, Config.DEV_GUILD_ID);
+        for (String guildId : guildIds) {
+            var guild = jda.getGuildById(guildId);
 
-        guild.updateCommands()
-                .addCommands(
-                        commandManager.getCommands().values().stream()
-                                .map(CommandInterface::getCommandData)
-                                .toList()
-                )
-                .queue(
-                        success -> logger.info("Commands registered with guild {}", Config.GUILD_ID),
-                        error -> logger.error("Failed to register commands with guild", error)
-                );
+            if (guild == null) {
+                logger.error("Guild with ID {} not found. Bot may not be a member of this guild.", guildId);
+                return;
+            }
+
+            guild.updateCommands()
+                    .addCommands(
+                            commandManager.getCommands().values().stream()
+                                    .map(CommandInterface::getCommandData)
+                                    .toList()
+                    )
+                    .queue(
+                            success -> logger.info("Commands registered with guild {}", guildId),
+                            error -> logger.error("Failed to register commands with guild", error)
+                    );
+        }
     }
 
     /**
