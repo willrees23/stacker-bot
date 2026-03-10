@@ -25,7 +25,6 @@ public class Config {
     public static final String MAIN_GUILD_ID = "1481061623568273622";
 
     // Role IDs
-    public static final String ROLE_REQUIRED = "1473026921158676480";
     public static final String ROLE_TESTER_1 = "1473013562371997879";
     public static final String ROLE_TESTER_2 = "1473013593405653115";
 

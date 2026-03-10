@@ -176,7 +176,7 @@ public class EmbedManager {
     public static MessageEmbed createPermissionDeniedEmbed() {
         return new EmbedBuilder()
                 .setTitle("❌ Permission Denied")
-                .setDescription("You don't have the required role to use this command.")
+                .setDescription("You need Administrator permission to use this command.")
                 .setColor(COLOR_ERROR)
                 .setTimestamp(Instant.now())
                 .build();

@@ -76,7 +76,7 @@ public class CommandManager extends ListenerAdapter {
             event.replyEmbeds(EmbedManager.createPermissionDeniedEmbed())
                     .setEphemeral(true)
                     .queue();
-            logger.info("User {} attempted to use command {} without required role",
+            logger.info("User {} attempted to use command {} without Administrator permission",
                     member != null ? member.getUser().getName() : "Unknown",
                     commandName);
             return;
